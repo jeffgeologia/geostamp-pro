@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoStamp Pro v3.0 — Carimbador e Unificador</title>
+<title>GeoStamp Pro v5.0 — Carimbador e Unificador</title>
 <style>
   * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
   body { margin: 0; padding: 20px; background: #0b0f19; color: #f8fafc; display: flex; justify-content: center; }
@@ -34,17 +34,14 @@
   @media (max-width: 680px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
   input[type=text], input[type=number], select { width: 100%; padding: 9px 10px; background: #111827; border: 1px solid #4b5563; color: #fff; border-radius: 6px; margin-top: 4px; margin-bottom: 10px; font-size: 14px; }
   .radio-pills { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 12px; }
-  .pill-label { flex: 1; position: relative; cursor: pointer; user-select: none; }
-  .pill-label input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
-  .pill-box { display: block; text-align: center; padding: 9px 8px; background: #111827; border: 1.5px solid #374151; color: #d1d5db; border-radius: 6px; font-weight: 700; font-size: 13px; transition: 0.15s; }
-  .pill-label:hover .pill-box { border-color: #f97316; }
-  .pill-label input[type="radio"]:checked + .pill-box { background: #ea580c; border-color: #f97316; color: #ffffff; }
+  .pill-btn { flex: 1; padding: 9px 8px; background: #111827; border: 1.5px solid #374151; color: #d1d5db; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.15s; }
+  .pill-btn:hover { border-color: #f97316; }
+  .pill-btn.ativo { background: #ea580c; border-color: #f97316; color: #ffffff; }
   .b-row { display: flex; gap: 10px; margin-top: 6px; }
   .b-clr { flex: 3; padding: 14px; background: #374151; border: none; color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
   .b-clr:hover { background: #4b5563; }
   .b-go { flex: 7; padding: 14px; background: linear-gradient(90deg, #ea580c, #f97316); border: none; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
   .b-go:hover { filter: brightness(1.08); }
-  .b-go:active { transform: scale(0.99); }
   .b-go:disabled { opacity: 0.55; cursor: wait; }
   .status { margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: #1f2937; font-size: 14px; font-weight: 600; color: #e5e7eb; border-left: 4px solid #3b82f6; }
   .status.erro { background: #450a0a; border-left-color: #ef4444; color: #fecaca; }
@@ -63,7 +60,7 @@
     <h2>📐 GeoStamp Pro — Carimbador e Unificador de Sondagens</h2>
     <div class="badges-top">
       <span id="motor-status" class="eng-tag">⏳ Carregando Motor PDF...</span>
-      <span class="ver-tag">v3.0 Blindada</span>
+      <span class="ver-tag">v5.0 Final</span>
     </div>
   </div>
 
@@ -85,18 +82,9 @@
     <div>
       <span class="lbl-sec">3. Atalho de Tipo e Prefixo Editável</span>
       <div class="radio-pills">
-        <label class="pill-label">
-          <input type="radio" name="tipo_sondagem" value="P" checked onclick="mudarTipo('P')">
-          <span class="pill-box">Percussão (P)</span>
-        </label>
-        <label class="pill-label">
-          <input type="radio" name="tipo_sondagem" value="T" onclick="mudarTipo('T')">
-          <span class="pill-box">Trado (T)</span>
-        </label>
-        <label class="pill-label">
-          <input type="radio" name="tipo_sondagem" value="OUTRO" onclick="mudarTipo('OUTRO')">
-          <span class="pill-box">Outro</span>
-        </label>
+        <button type="button" class="pill-btn ativo" id="btn-tipo-p">Percussão (P)</button>
+        <button type="button" class="pill-btn" id="btn-tipo-t">Trado (T)</button>
+        <button type="button" class="pill-btn" id="btn-tipo-o">Outro</button>
       </div>
       <label class="lbl-sec" for="pref">Prefixo Livre (Editável)</label>
       <input type="text" id="pref" value="P" placeholder="Ex: P, T, SP, SM">
@@ -148,5 +136,24 @@
   </details>
 
   <div class="b-row">
-    <button type="button" class="b-clr" onclick="limparTudo()">🗑️ Limpar</button>
-    <button type="button" class="b-go" id="btn-executar" onclick="iniciarCarimbo()">🚀 CARIMBAR E GERAR ARQUIVOS</button>
+    <button type="button" class="b-clr" id="btn-limpar">🗑️ Limpar</button>
+    <button type="button" class="b-go" id="btn-executar">🚀 CARIMBAR E GERAR ARQUIVOS</button>
+  </div>
+
+  <div id="status" class="status">Selecione os arquivos PDF no quadro 1 acima para começar.</div>
+  <div id="dl-box" class="dl-box"></div>
+
+  <div id="visor" class="visor">
+    <span style="font-size:13px;font-weight:700;color:#93c5fd;">🔍 Visualizador do Documento Carimbado (Role para conferir todas as páginas)</span>
+    <iframe id="pdf-frame" class="pdf-frame" title="Visualizador de PDF"></iframe>
+  </div>
+</div>
+
+<script>
+(function() {
+  var filaArquivos = [];
+  var dragIndex = null;
+  var urlDownloadAtiva = null;
+  var urlVisorAtiva = null;
+
+  var btnP = document.getElementById('btn-tipo-p');
