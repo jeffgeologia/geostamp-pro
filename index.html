@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>GeoStamp Pro — Carimbador e Unificador</title>
+<script src="https://unpkg.com"></script>
+<script src="https://unpkg.com"></script>
+<script src="https://cloudflare.com"></script>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body { margin: 0; padding: 20px; background: #0b0f19; color: #f8fafc; display: flex; justify-content: center; }
+  .wrap { max-width: 920px; width: 100%; background: #111827; border: 1px solid #374151; border-radius: 14px; padding: 24px; }
+  h2 { margin: 0 0 16px; font-size: 20px; }
+  .box { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .lbl-sec { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; display: block; }
+  .drop { display: block; border: 2px dashed #4b5563; border-radius: 8px; padding: 22px; text-align: center; cursor: pointer; background: #111827; }
+  .drop:hover { border-color: #f97316; }
+  .lista { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .item { display: flex; align-items: center; gap: 8px; background: #111827; border: 1px solid #374151; padding: 8px 10px; border-radius: 6px; font-size: 13px; }
+  .badge { background: #ea580c; color: #fff; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 11px; }
+  .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn-m { background: #374151; border: none; color: #fff; padding: 3px 8px; border-radius: 4px; cursor: pointer; }
+  .btn-x { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 680px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  input[type=text], input[type=number], select { width: 100%; padding: 8px 10px; background: #111827; border: 1px solid #374151; color: #fff; border-radius: 6px; margin-top: 4px; margin-bottom: 10px; }
+  .rgroup { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 10px; }
+  .rbtn { flex: 1; padding: 8px; background: #111827; border: 1px solid #374151; color: #d1d5db; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  .rbtn.on { background: #ea580c; border-color: #f97316; color: #fff; }
+  .b-row { display: flex; gap: 10px; margin-top: 6px; }
+  .b-clr { flex: 3; padding: 13px; background: #374151; border: none; color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  .b-go { flex: 7; padding: 13px; background: linear-gradient(90deg, #ea580c, #f97316); border: none; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+  .status { margin-top: 12px; font-size: 13.5px; color: #e5e7eb; }
+  .dl-box { display: none; margin-top: 10px; background: #1f2937; border: 1px solid #22c55e; padding: 12px; border-radius: 8px; }
+  .visor { display: none; margin-top: 14px; background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 14px; text-align: center; }
+  canvas { max-width: 100%; height: auto; border: 1px solid #4b5563; border-radius: 6px; margin-top: 10px; background: #fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>📐 GeoStamp Pro — Carimbador e Unificador de Sondagens</h2>
+
+  <div class="box">
+    <span class="lbl-sec">1. Adicionar PDFs (Arraste 1 ou vários — Carregamento Instantâneo)</span>
+    <label class="drop" id="dz">
+      Solte os arquivos PDF aqui ou <b>clique para selecionar</b>
+      <input type="file" id="in-pdf" accept=".pdf,application/pdf" multiple style="display:none">
+    </label>
+    <div id="lista" class="lista"></div>
+  </div>
+
+  <div class="box">
+    <span class="lbl-sec">2. Logomarca Opcional (PNG/JPG - Ex: Cagece)</span>
+    <input type="file" id="in-logo" accept="image/png,image/jpeg" style="font-size:13px;color:#d1d5db">
+  </div>
+
+  <div class="box grid2">
+    <div>
+      <span class="lbl-sec">3. Atalho de Tipo e Prefixo Editável</span>
+      <div class="rgroup">
+        <button type="button" class="rbtn on" id="bp" onclick="setP('P','bp')">Percussão (P)</button>
+        <button type="button" class="rbtn" id="bt" onclick="setP('T','bt')">Trado (T)</button>
+        <button type="button" class="rbtn" id="bo" onclick="setP('SP','bo')">Outro</button>
+      </div>
+      <label class="lbl-sec">Prefixo Livre (Editável)</label>
+      <input type="text" id="pref" value="P">
+    </div>
+    <div>
+      <span class="lbl-sec">4. Formato de Saída</span>
+      <select id="saida-modo">
+        <option value="unificar" selected>Unificar tudo em 1 único PDF</option>
+        <option value="separados">Manter separados (ZIP)</option>
+      </select>
+      <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:6px;">
+        <input type="checkbox" id="cont" checked> Numeração contínua entre os arquivos (01, 02...)
+      </label>
+    </div>
+  </div>
+
+  <details class="box">
+    <summary style="cursor:pointer;font-weight:700;font-size:13px;">⚙️ Ajustes de Cor, Posição e Fonte</summary>
+    <div class="grid2" style="margin-top:12px;">
+      <div>
+        <label class="lbl-sec">Cor do Carimbo</label>
+        <select id="tema">
+          <option value="amarelo" selected>Amarelo + Vermelho (Destaque)</option>
+          <option value="cinza">Cinza + Preto (Engenharia)</option>
+          <option value="branco">Branco + Preto (Simples)</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl-sec">Posição</label>
+        <select id="pos">
+          <option value="sup_dir" selected>Superior Direito</option>
+          <option value="sup_esq">Superior Esquerdo</option>
+          <option value="inf_dir">Inferior Direito</option>
+          <option value="inf_esq">Inferior Esquerdo</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid3">
+      <div><label class="lbl-sec">Nº Inicial</label><input type="number" id="nini" value="1" min="1"></div>
+      <div><label class="lbl-sec">Dígitos</label><input type="number" id="dig" value="2" min="2" max="4"></div>
+      <div><label class="lbl-sec">Fonte</label><input type="number" id="tf" value="13" min="8" max="22"></div>
+      <div><label class="lbl-sec">Margem X</label><input type="number" id="mx" value="14"></div>
+      <div><label class="lbl-sec">Margem Y</label><input type="number" id="my" value="6"></div>
+    </div>
+  </details>
+
+  <div class="b-row">
+    <button type="button" class="b-clr" onclick="limpar()">Limpar</button>
+    <button type="button" class="b-go" onclick="executar()">CARIMBAR E GERAR ARQUIVOS</button>
+  </div>
+
+  <div id="status" class="status">Aguardando envio dos arquivos...</div>
+  <div id="dl-box" class="dl-box"></div>
+
+  <div id="visor" class="visor">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <span style="font-size:13px;font-weight:700;">🔍 Visualizador do Documento Carimbado</span>
+      <div>
+        <button type="button" class="btn-m" onclick="mudarPag(-1)">◀ Anterior</button>
+        <span id="pag-info" style="font-size:13px;margin:0 8px;">Página 1</span>
+        <button type="button" class="btn-m" onclick="mudarPag(1)">Próxima ▶</button>
+      </div>
+    </div>
+    <canvas id="pdf-canvas"></canvas>
+  </div>
+</div>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cloudflare.com';
+  let fila = [], pdfVisor = null, pagAtual = 1;
+
+  function setP(v, id) {
+    document.getElementById('pref').value = v;
+    document.querySelectorAll('.rbtn').forEach(b => b.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+  }
+
+  function addFiles(fl) {
+    const arr = Array.from(fl).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    arr.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    arr.forEach(f => fila.push(f));
+    renderLista();
+  }
+
+  document.getElementById('in-pdf').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+  const dz = document.getElementById('dz');
+  dz.ondragover = e => e.preventDefault();
+  dz.ondrop = e => { e.preventDefault(); if (e.dataTransfer.files) addFiles(e.dataTransfer.files); };
+
+  function mover(i, d) {
+    const ni = i + d;
+    if (ni < 0 || ni >= fila.length) return;
+    const t = fila[i]; fila[i] = fila[ni]; fila[ni] = t;
+    renderLista();
+  }
+  function rem(i) { fila.splice(i, 1); renderLista(); }
+  function limpar() {
+    fila = []; renderLista();
+    document.getElementById('dl-box').style.display = 'none';
+    document.getElementById('visor').style.display = 'none';
+    document.getElementById('status').textContent = 'Aguardando envio dos arquivos...';
+  }
+
+  function renderLista() {
+    const el = document.getElementById('lista');
+    el.innerHTML = fila.map((f, i) => `
+      <div class="item">
+        <span class="badge">${i + 1}</span>
+        <span class="nome">${f.name}</span>
+        <span style="color:#9ca3af;font-size:12px;">${(f.size / 1048576).toFixed(1)} MB</span>
+        <button type="button" class="btn-m" onclick="mover(${i},-1)">▲</button>
+        <button type="button" class="btn-m" onclick="mover(${i},1)">▼</button>
+        <button type="button" class="btn-x" onclick="rem(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async function carimbar(doc, pref, nIni, dig, tema, pos, tf, mx, my, logoBytes, logoType) {
+    const { StandardFonts, rgb } = PDFLib;
+    const font = await doc.embedFont(StandardFonts.HelveticaBold);
+    const img = logoBytes ? (logoType === 'image/png' ? await doc.embedPng(logoBytes) : await doc.embedJpg(logoBytes)) : null;
+    const cores = {
+      amarelo: { bg: rgb(1, 0.98, 0.8), fg: rgb(0.75, 0, 0) },
