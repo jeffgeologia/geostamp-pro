@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>GeoStamp Pro — Carimbador e Unificador</title>
-<script src="https://unpkg.com"></script>
-<script src="https://unpkg.com"></script>
-<script src="https://cloudflare.com"></script>
 <style>
   * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
   body { margin: 0; padding: 20px; background: #0b0f19; color: #f8fafc; display: flex; justify-content: center; }
@@ -27,7 +24,8 @@
   @media (max-width: 680px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
   input[type=text], input[type=number], select { width: 100%; padding: 8px 10px; background: #111827; border: 1px solid #374151; color: #fff; border-radius: 6px; margin-top: 4px; margin-bottom: 10px; }
   .rgroup { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 10px; }
-  .rbtn { flex: 1; padding: 8px; background: #111827; border: 1px solid #374151; color: #d1d5db; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  .rbtn { flex: 1; padding: 9px 8px; background: #111827; border: 1.5px solid #374151; color: #d1d5db; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.15s; }
+  .rbtn:hover { border-color: #f97316; }
   .rbtn.on { background: #ea580c; border-color: #f97316; color: #fff; }
   .b-row { display: flex; gap: 10px; margin-top: 6px; }
   .b-clr { flex: 3; padding: 13px; background: #374151; border: none; color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; }
@@ -65,7 +63,7 @@
         <button type="button" class="rbtn" id="bo" onclick="setP('SP','bo')">Outro</button>
       </div>
       <label class="lbl-sec">Prefixo Livre (Editável)</label>
-      <input type="text" id="pref" value="P">
+      <input type="text" id="pref" value="P" placeholder="Digite qualquer prefixo (Ex: P, T, SP, SM)">
     </div>
     <div>
       <span class="lbl-sec">4. Formato de Saída</span>
@@ -131,18 +129,22 @@
 </div>
 
 <script>
-  if (typeof pdfjsLib !== 'undefined') {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cloudflare.com';
-  }
   var fila = [];
   var pdfVisor = null;
   var pagAtual = 1;
 
   function setP(v, id) {
-    document.getElementById('pref').value = v;
+    var campo = document.getElementById('pref');
+    campo.value = v;
     var btns = document.querySelectorAll('.rbtn');
-    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('on');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.remove('on');
+    }
     document.getElementById(id).classList.add('on');
+    if (id === 'bo') {
+      campo.focus();
+      campo.select();
+    }
   }
 
   function addFiles(fl) {
@@ -205,3 +207,5 @@
       var f = fila[i];
       var mb = (f.size / 1048576).toFixed(1);
       var setas = fila.length > 1
+        ? '<button type="button" class="btn-m" onclick="mover(' + i + ',-1)">▲</button>' +
+          '<button type="button" class="btn-m" onclick="mover(' + i + ',1)">▼</button>'
