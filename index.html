@@ -3,21 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoStamp Pro — Carimbador e Unificador</title>
+<title>GeoStamp Pro v3.0 — Carimbador e Unificador</title>
 <style>
   * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
   body { margin: 0; padding: 20px; background: #0b0f19; color: #f8fafc; display: flex; justify-content: center; }
-  .wrap { max-width: 920px; width: 100%; background: #111827; border: 1px solid #374151; border-radius: 14px; padding: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
-  .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #1f2937; padding-bottom: 12px; }
+  .wrap { max-width: 920px; width: 100%; background: #111827; border: 1px solid #374151; border-radius: 14px; padding: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); }
+  .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid #1f2937; padding-bottom: 12px; }
   h2 { margin: 0; font-size: 20px; color: #ffffff; }
-  .ver-tag { background: #1e3a8a; color: #93c5fd; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 99px; }
+  .badges-top { display: flex; gap: 8px; align-items: center; }
+  .ver-tag { background: #1e3a8a; color: #93c5fd; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px; }
+  .eng-tag { background: #78350f; color: #fde68a; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px; }
+  .eng-tag.ready { background: #064e3b; color: #6ee7b7; }
+  .eng-tag.fail { background: #7f1d1d; color: #fca5a5; }
   .box { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 15px; margin-bottom: 14px; }
   .lbl-sec { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 0.4px; }
   .drop { border: 2px dashed #4b5563; border-radius: 8px; padding: 20px; text-align: center; background: #111827; transition: 0.2s; }
   .drop.over { border-color: #f97316; background: #1e293b; }
-  .input-nativo { margin-top: 10px; padding: 8px; background: #1f2937; border: 1px solid #4b5563; border-radius: 6px; color: #f8fafc; font-size: 13px; cursor: pointer; width: 100%; max-width: 420px; }
+  .input-nativo { margin-top: 10px; padding: 8px; background: #1f2937; border: 1px solid #4b5563; border-radius: 6px; color: #f8fafc; font-size: 13px; cursor: pointer; width: 100%; max-width: 440px; }
   .lista { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-  .item { display: flex; align-items: center; gap: 8px; background: #111827; border: 1px solid #374151; padding: 8px 10px; border-radius: 6px; font-size: 13px; }
+  .item { display: flex; align-items: center; gap: 8px; background: #111827; border: 1px solid #374151; padding: 9px 12px; border-radius: 6px; font-size: 13px; cursor: grab; }
+  .item.dragging { opacity: 0.45; border: 1px dashed #f97316; }
+  .grip { color: #f97316; font-weight: bold; font-size: 15px; user-select: none; }
   .badge { background: #ea580c; color: #fff; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
   .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .btn-m { background: #374151; border: 1px solid #4b5563; color: #fff; padding: 4px 9px; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -27,43 +33,44 @@
   .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
   @media (max-width: 680px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
   input[type=text], input[type=number], select { width: 100%; padding: 9px 10px; background: #111827; border: 1px solid #4b5563; color: #fff; border-radius: 6px; margin-top: 4px; margin-bottom: 10px; font-size: 14px; }
-  input[type=text]:focus, input[type=number]:focus, select:focus { outline: none; border-color: #f97316; }
-
-  /* Botões de Rádio Nativos Estilizados (Funciona em 100% dos navegadores sem travar) */
   .radio-pills { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 12px; }
   .pill-label { flex: 1; position: relative; cursor: pointer; user-select: none; }
   .pill-label input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
   .pill-box { display: block; text-align: center; padding: 9px 8px; background: #111827; border: 1.5px solid #374151; color: #d1d5db; border-radius: 6px; font-weight: 700; font-size: 13px; transition: 0.15s; }
   .pill-label:hover .pill-box { border-color: #f97316; }
   .pill-label input[type="radio"]:checked + .pill-box { background: #ea580c; border-color: #f97316; color: #ffffff; }
-
   .b-row { display: flex; gap: 10px; margin-top: 6px; }
-  .b-clr { flex: 3; padding: 13px; background: #374151; border: none; color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+  .b-clr { flex: 3; padding: 14px; background: #374151; border: none; color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
   .b-clr:hover { background: #4b5563; }
-  .b-go { flex: 7; padding: 13px; background: linear-gradient(90deg, #ea580c, #f97316); border: none; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+  .b-go { flex: 7; padding: 14px; background: linear-gradient(90deg, #ea580c, #f97316); border: none; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
   .b-go:hover { filter: brightness(1.08); }
-  .b-go:disabled { opacity: 0.5; cursor: wait; }
-  .status { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #1f2937; font-size: 13.5px; color: #e5e7eb; border-left: 4px solid #3b82f6; }
-  .status.erro { border-left-color: #ef4444; color: #fca5a5; }
-  .status.ok { border-left-color: #22c55e; color: #bbf7d0; }
-  .dl-box { display: none; margin-top: 10px; background: #064e3b; border: 1px solid #22c55e; padding: 14px; border-radius: 8px; text-align: center; }
-  .dl-link { color: #4ade80; font-weight: 800; font-size: 15px; text-decoration: none; display: inline-block; }
-  .dl-link:hover { text-decoration: underline; }
+  .b-go:active { transform: scale(0.99); }
+  .b-go:disabled { opacity: 0.55; cursor: wait; }
+  .status { margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: #1f2937; font-size: 14px; font-weight: 600; color: #e5e7eb; border-left: 4px solid #3b82f6; }
+  .status.erro { background: #450a0a; border-left-color: #ef4444; color: #fecaca; }
+  .status.ok { background: #064e3b; border-left-color: #22c55e; color: #bbf7d0; }
+  .status.wait { background: #1e3a8a; border-left-color: #60a5fa; color: #dbeafe; }
+  .dl-box { display: none; margin-top: 12px; background: #065f46; border: 2px solid #34d399; padding: 16px; border-radius: 8px; text-align: center; }
+  .dl-link { color: #ffffff; background: #10b981; padding: 10px 20px; border-radius: 6px; font-weight: 800; font-size: 15px; text-decoration: none; display: inline-block; }
+  .dl-link:hover { background: #059669; }
   .visor { display: none; margin-top: 16px; background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 14px; }
-  .pdf-frame { width: 100%; height: 640px; border: 1px solid #4b5563; border-radius: 6px; margin-top: 10px; background: #fff; }
+  .pdf-frame { width: 100%; height: 650px; border: 1px solid #4b5563; border-radius: 6px; margin-top: 10px; background: #fff; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header-bar">
     <h2>📐 GeoStamp Pro — Carimbador e Unificador de Sondagens</h2>
-    <span class="ver-tag">v2.0 Estável</span>
+    <div class="badges-top">
+      <span id="motor-status" class="eng-tag">⏳ Carregando Motor PDF...</span>
+      <span class="ver-tag">v3.0 Blindada</span>
+    </div>
   </div>
 
   <div class="box">
-    <span class="lbl-sec">1. Adicionar PDFs (Arraste para o quadro ou selecione abaixo)</span>
+    <span class="lbl-sec">1. Adicionar PDFs (Solte no quadro ou selecione — Arraste os itens para ordenar)</span>
     <div class="drop" id="dz">
-      <div style="font-size:14px;margin-bottom:4px;">Solte os arquivos PDF aqui dentro ou clique no botão:</div>
+      <div style="font-size:14px;margin-bottom:4px;">Solte os arquivos PDF aqui dentro ou clique em Escolher arquivos:</div>
       <input type="file" id="in-pdf" accept=".pdf,application/pdf" multiple class="input-nativo">
     </div>
     <div id="lista" class="lista"></div>
@@ -79,20 +86,20 @@
       <span class="lbl-sec">3. Atalho de Tipo e Prefixo Editável</span>
       <div class="radio-pills">
         <label class="pill-label">
-          <input type="radio" name="tipo_sondagem" value="P" checked>
+          <input type="radio" name="tipo_sondagem" value="P" checked onclick="mudarTipo('P')">
           <span class="pill-box">Percussão (P)</span>
         </label>
         <label class="pill-label">
-          <input type="radio" name="tipo_sondagem" value="T">
+          <input type="radio" name="tipo_sondagem" value="T" onclick="mudarTipo('T')">
           <span class="pill-box">Trado (T)</span>
         </label>
         <label class="pill-label">
-          <input type="radio" name="tipo_sondagem" value="OUTRO">
+          <input type="radio" name="tipo_sondagem" value="OUTRO" onclick="mudarTipo('OUTRO')">
           <span class="pill-box">Outro</span>
         </label>
       </div>
       <label class="lbl-sec" for="pref">Prefixo Livre (Editável)</label>
-      <input type="text" id="pref" value="P" placeholder="Digite qualquer prefixo (Ex: P, T, SP, SM)">
+      <input type="text" id="pref" value="P" placeholder="Ex: P, T, SP, SM">
     </div>
 
     <div>
@@ -141,27 +148,5 @@
   </details>
 
   <div class="b-row">
-    <button type="button" class="b-clr" id="btn-limpar">🗑️ Limpar</button>
-    <button type="button" class="b-go" id="btn-executar">🚀 CARIMBAR E GERAR ARQUIVOS</button>
-  </div>
-
-  <div id="status" class="status">Aguardando seleção dos arquivos PDF...</div>
-  <div id="dl-box" class="dl-box"></div>
-
-  <div id="visor" class="visor">
-    <span style="font-size:13px;font-weight:700;color:#93c5fd;">🔍 Visualizador do Documento Carimbado (Role para conferir todas as páginas)</span>
-    <iframe id="pdf-frame" class="pdf-frame" title="Visualizador de PDF"></iframe>
-  </div>
-</div>
-
-<!-- Bibliotecas carregadas de CDN confiável -->
-<script src="https://jsdelivr.net"></script>
-<script src="https://jsdelivr.net"></script>
-
-<script>
-(function() {
-  var fila = [];
-  var urlAtualDownload = null;
-  var urlAtualVisor = null;
-
-  var inPdf = document.getElementById('in-pdf');
+    <button type="button" class="b-clr" onclick="limparTudo()">🗑️ Limpar</button>
+    <button type="button" class="b-go" id="btn-executar" onclick="iniciarCarimbo()">🚀 CARIMBAR E GERAR ARQUIVOS</button>
