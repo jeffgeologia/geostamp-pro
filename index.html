@@ -3,121 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoStamp Pro v5.0 — Carimbador e Unificador</title>
+<title>GeoStamp Pro v6.0</title>
+<script src="./pdf-lib.min.js"></script>
+<script src="./jszip.min.js"></script>
 <style>
-  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
   body { margin: 0; padding: 20px; background: #0b0f19; color: #f8fafc; display: flex; justify-content: center; }
-  .wrap { max-width: 920px; width: 100%; background: #111827; border: 1px solid #374151; border-radius: 14px; padding: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); }
-  .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid #1f2937; padding-bottom: 12px; }
-  h2 { margin: 0; font-size: 20px; color: #ffffff; }
-  .badges-top { display: flex; gap: 8px; align-items: center; }
-  .ver-tag { background: #1e3a8a; color: #93c5fd; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px; }
-  .eng-tag { background: #78350f; color: #fde68a; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px; }
-  .eng-tag.ready { background: #064e3b; color: #6ee7b7; }
-  .eng-tag.fail { background: #7f1d1d; color: #fca5a5; }
+  .wrap { max-width: 920px; width: 100%; background: #111827; border: 1px solid #374151; border-radius: 14px; padding: 24px; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #1f2937; padding-bottom: 12px; }
+  h2 { margin: 0; font-size: 20px; color: #fff; }
+  .tag { padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; background: #1e3a8a; color: #93c5fd; }
+  .tag.ok { background: #064e3b; color: #6ee7b7; }
+  .tag.err { background: #7f1d1d; color: #fca5a5; }
   .box { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 15px; margin-bottom: 14px; }
-  .lbl-sec { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 0.4px; }
-  .drop { border: 2px dashed #4b5563; border-radius: 8px; padding: 20px; text-align: center; background: #111827; transition: 0.2s; }
-  .drop.over { border-color: #f97316; background: #1e293b; }
-  .input-nativo { margin-top: 10px; padding: 8px; background: #1f2937; border: 1px solid #4b5563; border-radius: 6px; color: #f8fafc; font-size: 13px; cursor: pointer; width: 100%; max-width: 440px; }
+  .lbl { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; display: block; text-transform: uppercase; }
+  .drop { border: 2px dashed #4b5563; border-radius: 8px; padding: 18px; text-align: center; background: #111827; }
+  .in-file { margin-top: 8px; padding: 8px; background: #1f2937; border: 1px solid #4b5563; border-radius: 6px; color: #fff; width: 100%; max-width: 440px; cursor: pointer; }
   .lista { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-  .item { display: flex; align-items: center; gap: 8px; background: #111827; border: 1px solid #374151; padding: 9px 12px; border-radius: 6px; font-size: 13px; cursor: grab; }
-  .item.dragging { opacity: 0.45; border: 1px dashed #f97316; }
-  .grip { color: #f97316; font-weight: bold; font-size: 15px; user-select: none; }
-  .badge { background: #ea580c; color: #fff; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-  .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .btn-m { background: #374151; border: 1px solid #4b5563; color: #fff; padding: 4px 9px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-  .btn-m:hover { background: #4b5563; }
-  .btn-x { background: none; border: none; color: #ef4444; font-weight: bold; font-size: 15px; cursor: pointer; padding: 2px 6px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-  @media (max-width: 680px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  .item { display: flex; align-items: center; gap: 8px; background: #111827; border: 1px solid #374151; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
+  .bdg { background: #ea580c; color: #fff; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+  .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bm { background: #374151; border: 1px solid #4b5563; color: #fff; padding: 4px 9px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+  .bx { background: none; border: none; color: #ef4444; font-weight: bold; font-size: 15px; cursor: pointer; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 680px) { .g2, .g3 { grid-template-columns: 1fr; } }
   input[type=text], input[type=number], select { width: 100%; padding: 9px 10px; background: #111827; border: 1px solid #4b5563; color: #fff; border-radius: 6px; margin-top: 4px; margin-bottom: 10px; font-size: 14px; }
-  .radio-pills { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 12px; }
-  .pill-btn { flex: 1; padding: 9px 8px; background: #111827; border: 1.5px solid #374151; color: #d1d5db; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.15s; }
-  .pill-btn:hover { border-color: #f97316; }
-  .pill-btn.ativo { background: #ea580c; border-color: #f97316; color: #ffffff; }
-  .b-row { display: flex; gap: 10px; margin-top: 6px; }
-  .b-clr { flex: 3; padding: 14px; background: #374151; border: none; color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
-  .b-clr:hover { background: #4b5563; }
-  .b-go { flex: 7; padding: 14px; background: linear-gradient(90deg, #ea580c, #f97316); border: none; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
-  .b-go:hover { filter: brightness(1.08); }
-  .b-go:disabled { opacity: 0.55; cursor: wait; }
-  .status { margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: #1f2937; font-size: 14px; font-weight: 600; color: #e5e7eb; border-left: 4px solid #3b82f6; }
-  .status.erro { background: #450a0a; border-left-color: #ef4444; color: #fecaca; }
-  .status.ok { background: #064e3b; border-left-color: #22c55e; color: #bbf7d0; }
-  .status.wait { background: #1e3a8a; border-left-color: #60a5fa; color: #dbeafe; }
-  .dl-box { display: none; margin-top: 12px; background: #065f46; border: 2px solid #34d399; padding: 16px; border-radius: 8px; text-align: center; }
-  .dl-link { color: #ffffff; background: #10b981; padding: 10px 20px; border-radius: 6px; font-weight: 800; font-size: 15px; text-decoration: none; display: inline-block; }
-  .dl-link:hover { background: #059669; }
+  .pills { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 12px; }
+  .pbtn { flex: 1; padding: 9px; background: #111827; border: 1.5px solid #374151; color: #d1d5db; border-radius: 6px; font-weight: 700; cursor: pointer; }
+  .pbtn.on { background: #ea580c; border-color: #f97316; color: #fff; }
+  .brow { display: flex; gap: 10px; margin-top: 6px; }
+  .bclr { flex: 3; padding: 14px; background: #374151; border: none; color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  .bgo { flex: 7; padding: 14px; background: linear-gradient(90deg, #ea580c, #f97316); border: none; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+  .sts { margin-top: 14px; padding: 12px; border-radius: 8px; background: #1f2937; font-size: 14px; font-weight: 600; border-left: 4px solid #3b82f6; }
+  .sts.err { background: #450a0a; border-left-color: #ef4444; color: #fecaca; }
+  .sts.ok { background: #064e3b; border-left-color: #22c55e; color: #bbf7d0; }
+  .dl { display: none; margin-top: 12px; background: #065f46; border: 2px solid #34d399; padding: 14px; border-radius: 8px; text-align: center; }
+  .dl a { color: #fff; background: #10b981; padding: 10px 18px; border-radius: 6px; font-weight: 800; text-decoration: none; display: inline-block; }
   .visor { display: none; margin-top: 16px; background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 14px; }
-  .pdf-frame { width: 100%; height: 650px; border: 1px solid #4b5563; border-radius: 6px; margin-top: 10px; background: #fff; }
+  iframe { width: 100%; height: 640px; border: 1px solid #4b5563; border-radius: 6px; margin-top: 10px; background: #fff; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="header-bar">
-    <h2>📐 GeoStamp Pro — Carimbador e Unificador de Sondagens</h2>
-    <div class="badges-top">
-      <span id="motor-status" class="eng-tag">⏳ Carregando Motor PDF...</span>
-      <span class="ver-tag">v5.0 Final</span>
+  <div class="top">
+    <h2>📐 GeoStamp Pro — Carimbador e Unificador</h2>
+    <div>
+      <span id="tag-motor" class="tag">Verificando motor...</span>
+      <span class="tag">v6.0 Local</span>
     </div>
   </div>
 
   <div class="box">
-    <span class="lbl-sec">1. Adicionar PDFs (Solte no quadro ou selecione — Arraste os itens para ordenar)</span>
+    <span class="lbl">1. Adicionar PDFs</span>
     <div class="drop" id="dz">
-      <div style="font-size:14px;margin-bottom:4px;">Solte os arquivos PDF aqui dentro ou clique em Escolher arquivos:</div>
-      <input type="file" id="in-pdf" accept=".pdf,application/pdf" multiple class="input-nativo">
+      <div>Solte seus PDFs aqui ou clique no botão abaixo:</div>
+      <input type="file" id="in-pdf" accept=".pdf,application/pdf" multiple class="in-file">
     </div>
     <div id="lista" class="lista"></div>
   </div>
 
   <div class="box">
-    <span class="lbl-sec">2. Logomarca Opcional (PNG ou JPG — Ex: Cagece)</span>
-    <input type="file" id="in-logo" accept="image/png,image/jpeg,image/webp" style="font-size:13px;color:#d1d5db;max-width:100%;">
+    <span class="lbl">2. Logomarca Opcional (PNG ou JPG)</span>
+    <input type="file" id="in-logo" accept="image/png,image/jpeg,image/webp" style="font-size:13px;color:#d1d5db;">
   </div>
 
-  <div class="box grid2">
+  <div class="box g2">
     <div>
-      <span class="lbl-sec">3. Atalho de Tipo e Prefixo Editável</span>
-      <div class="radio-pills">
-        <button type="button" class="pill-btn ativo" id="btn-tipo-p">Percussão (P)</button>
-        <button type="button" class="pill-btn" id="btn-tipo-t">Trado (T)</button>
-        <button type="button" class="pill-btn" id="btn-tipo-o">Outro</button>
+      <span class="lbl">3. Tipo e Prefixo Editável</span>
+      <div class="pills">
+        <button type="button" class="pbtn on" id="bp" onclick="definirPre('P')">Percussão (P)</button>
+        <button type="button" class="pbtn" id="bt" onclick="definirPre('T')">Trado (T)</button>
+        <button type="button" class="pbtn" id="bo" onclick="definirPre('OUTRO')">Outro</button>
       </div>
-      <label class="lbl-sec" for="pref">Prefixo Livre (Editável)</label>
-      <input type="text" id="pref" value="P" placeholder="Ex: P, T, SP, SM">
+      <label class="lbl">Prefixo Livre</label>
+      <input type="text" id="pref" value="P">
     </div>
-
     <div>
-      <span class="lbl-sec">4. Formato de Saída</span>
-      <select id="saida-modo">
+      <span class="lbl">4. Formato de Saída</span>
+      <select id="modo">
         <option value="unificar" selected>📑 Unificar tudo em 1 único PDF</option>
-        <option value="separados">📂 Manter separados (Pacote ZIP)</option>
-        <option value="ambos">📦 Ambos (PDF Unificado + Individuais no ZIP)</option>
+        <option value="separados">📂 Manter separados (ZIP)</option>
       </select>
       <label style="font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px;">
-        <input type="checkbox" id="cont" checked style="width:16px;height:16px;cursor:pointer;">
-        <span>Numeração contínua entre os arquivos (01, 02, 03...)</span>
+        <input type="checkbox" id="cont" checked> Numeração contínua entre os arquivos
       </label>
     </div>
   </div>
 
   <details class="box">
-    <summary style="cursor:pointer;font-weight:700;font-size:13px;color:#e5e7eb;">⚙️ Ajustes de Cor, Posição e Fonte</summary>
-    <div class="grid2" style="margin-top:12px;">
+    <summary style="cursor:pointer;font-weight:700;font-size:13px;">⚙️ Ajustes de Cor, Posição e Fonte</summary>
+    <div class="g2" style="margin-top:12px;">
       <div>
-        <label class="lbl-sec">Cor do Carimbo</label>
+        <label class="lbl">Cor do Carimbo</label>
         <select id="tema">
-          <option value="amarelo" selected>Amarelo + Vermelho (Destaque)</option>
-          <option value="cinza">Cinza + Preto (Engenharia)</option>
-          <option value="azul">Azul + Branco (Institucional)</option>
-          <option value="branco">Branco + Preto (Simples)</option>
+          <option value="amarelo" selected>Amarelo + Vermelho</option>
+          <option value="cinza">Cinza + Preto</option>
+          <option value="azul">Azul + Branco</option>
+          <option value="branco">Branco + Preto</option>
         </select>
       </div>
       <div>
-        <label class="lbl-sec">Posição na Página</label>
+        <label class="lbl">Posição</label>
         <select id="pos">
           <option value="sup_dir" selected>Superior Direito</option>
           <option value="sup_esq">Superior Esquerdo</option>
@@ -126,34 +113,78 @@
         </select>
       </div>
     </div>
-    <div class="grid3">
-      <div><label class="lbl-sec">Nº Inicial</label><input type="number" id="nini" value="1" min="1"></div>
-      <div><label class="lbl-sec">Dígitos</label><input type="number" id="dig" value="2" min="1" max="5"></div>
-      <div><label class="lbl-sec">Fonte (pt)</label><input type="number" id="tf" value="13" min="8" max="26"></div>
-      <div><label class="lbl-sec">Margem X</label><input type="number" id="mx" value="14" min="0" max="200"></div>
-      <div><label class="lbl-sec">Margem Y</label><input type="number" id="my" value="6" min="0" max="200"></div>
+    <div class="g3">
+      <div><label class="lbl">Nº Inicial</label><input type="number" id="nini" value="1" min="1"></div>
+      <div><label class="lbl">Dígitos</label><input type="number" id="dig" value="2" min="1" max="5"></div>
+      <div><label class="lbl">Fonte</label><input type="number" id="tf" value="13" min="8" max="26"></div>
+      <div><label class="lbl">Margem X</label><input type="number" id="mx" value="14"></div>
+      <div><label class="lbl">Margem Y</label><input type="number" id="my" value="6"></div>
     </div>
   </details>
 
-  <div class="b-row">
-    <button type="button" class="b-clr" id="btn-limpar">🗑️ Limpar</button>
-    <button type="button" class="b-go" id="btn-executar">🚀 CARIMBAR E GERAR ARQUIVOS</button>
+  <div class="brow">
+    <button type="button" class="bclr" onclick="limparTudo()">🗑️ Limpar</button>
+    <button type="button" class="bgo" id="btn-go" onclick="executarCarimbo()">🚀 CARIMBAR E GERAR ARQUIVOS</button>
   </div>
 
-  <div id="status" class="status">Selecione os arquivos PDF no quadro 1 acima para começar.</div>
-  <div id="dl-box" class="dl-box"></div>
+  <div id="sts" class="sts">Selecione os arquivos PDF no quadro 1 acima.</div>
+  <div id="dl" class="dl"></div>
 
   <div id="visor" class="visor">
-    <span style="font-size:13px;font-weight:700;color:#93c5fd;">🔍 Visualizador do Documento Carimbado (Role para conferir todas as páginas)</span>
-    <iframe id="pdf-frame" class="pdf-frame" title="Visualizador de PDF"></iframe>
+    <span style="font-size:13px;font-weight:700;color:#93c5fd;">🔍 Visualizador do Documento Carimbado</span>
+    <iframe id="frame-pdf" title="Visualizador"></iframe>
   </div>
 </div>
 
 <script>
-(function() {
-  var filaArquivos = [];
-  var dragIndex = null;
-  var urlDownloadAtiva = null;
-  var urlVisorAtiva = null;
+  var fila = [];
+  var urlDl = null;
+  var urlVis = null;
 
-  var btnP = document.getElementById('btn-tipo-p');
+  function checarMotor() {
+    var t = document.getElementById('tag-motor');
+    if (typeof PDFLib !== 'undefined' && typeof JSZip !== 'undefined') {
+      t.textContent = '✅ Motor Pronto';
+      t.className = 'tag ok';
+      return true;
+    } else {
+      t.textContent = '⚠️ Suba pdf-lib.min.js e jszip.min.js no GitHub';
+      t.className = 'tag err';
+      return false;
+    }
+  }
+  window.onload = checarMotor;
+
+  function avisar(msg, tipo) {
+    var s = document.getElementById('sts');
+    s.innerHTML = msg;
+    s.className = 'sts' + (tipo ? ' ' + tipo : '');
+  }
+
+  function definirPre(modo) {
+    var cp = document.getElementById('pref');
+    document.getElementById('bp').className = 'pbtn' + (modo === 'P' ? ' on' : '');
+    document.getElementById('bt').className = 'pbtn' + (modo === 'T' ? ' on' : '');
+    document.getElementById('bo').className = 'pbtn' + (modo === 'OUTRO' ? ' on' : '');
+    if (modo === 'P') cp.value = 'P';
+    else if (modo === 'T') cp.value = 'T';
+    else { cp.value = 'SP'; cp.focus(); cp.select(); }
+  }
+
+  function adicionarLista(fl) {
+    if (!fl || fl.length === 0) return;
+    var novos = Array.from(fl).filter(function(f) {
+      return f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf';
+    });
+    novos.sort(function(a, b) {
+      return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+    });
+    novos.forEach(function(f) { fila.push(f); });
+    document.getElementById('in-pdf').value = '';
+    desenharFila();
+    avisar('📂 <b>' + fila.length + ' PDF(s)</b> prontos para carimbar.', '');
+  }
+
+  document.getElementById('in-pdf').onchange = function() { adicionarLista(this.files); };
+  var dz = document.getElementById('dz');
+  dz.ondragover = function(e) { e.preventDefault(); };
