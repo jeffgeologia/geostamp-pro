@@ -13,9 +13,9 @@
   h2 { margin: 0 0 16px; font-size: 20px; }
   .box { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
   .lbl-sec { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; display: block; }
-  .drop { border: 2px dashed #4b5563; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; background: #111827; transition: 0.2s; }
-  .drop:hover, .drop.over { border-color: #f97316; background: #1e293b; }
-  .btn-sel { margin-top: 10px; padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  .drop { border: 2px dashed #4b5563; border-radius: 8px; padding: 20px; text-align: center; background: #111827; transition: 0.2s; }
+  .drop.over { border-color: #f97316; background: #1e293b; }
+  .input-nativo { margin-top: 10px; padding: 8px; background: #1f2937; border: 1px solid #4b5563; border-radius: 6px; color: #f8fafc; font-size: 13px; cursor: pointer; max-width: 100%; }
   .lista { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
   .item { display: flex; align-items: center; gap: 8px; background: #111827; border: 1px solid #374151; padding: 8px 10px; border-radius: 6px; font-size: 13px; }
   .badge { background: #ea580c; color: #fff; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 11px; }
@@ -43,12 +43,11 @@
   <h2>📐 GeoStamp Pro — Carimbador e Unificador de Sondagens</h2>
 
   <div class="box">
-    <span class="lbl-sec">1. Adicionar PDFs (Arraste 1 ou vários — Carregamento Instantâneo)</span>
-    <div class="drop" id="dz" onclick="abrirSeletor()">
-      <div>Solte os arquivos PDF aqui dentro</div>
-      <button type="button" class="btn-sel">📂 Selecionar Arquivos PDF</button>
+    <span class="lbl-sec">1. Adicionar PDFs (Arraste para dentro do quadro ou clique em "Escolher arquivos")</span>
+    <div class="drop" id="dz">
+      <div>Solte os arquivos PDF aqui dentro ou selecione pelo botão abaixo:</div>
+      <input type="file" id="in-pdf" accept=".pdf,application/pdf" multiple class="input-nativo" onchange="addFiles(this.files)">
     </div>
-    <input type="file" id="in-pdf" accept=".pdf,application/pdf" multiple style="display:none">
     <div id="lista" class="lista"></div>
   </div>
 
@@ -135,59 +134,74 @@
   if (typeof pdfjsLib !== 'undefined') {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cloudflare.com';
   }
-  let fila = [], pdfVisor = null, pagAtual = 1;
-
-  function abrirSeletor() {
-    document.getElementById('in-pdf').click();
-  }
+  var fila = [];
+  var pdfVisor = null;
+  var pagAtual = 1;
 
   function setP(v, id) {
     document.getElementById('pref').value = v;
-    document.querySelectorAll('.rbtn').forEach(b => b.classList.remove('on'));
+    var btns = document.querySelectorAll('.rbtn');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('on');
     document.getElementById(id).classList.add('on');
   }
 
   function addFiles(fl) {
     if (!fl || !fl.length) return;
-    const arr = Array.from(fl).filter(f => f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf');
-    arr.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-    for (let i = 0; i < arr.length; i++) {
-      fila.push(arr[i]);
+    var arr = [];
+    for (var i = 0; i < fl.length; i++) {
+      var nome = fl[i].name.toLowerCase();
+      if (nome.endsWith('.pdf') || fl[i].type === 'application/pdf') {
+        arr.push(fl[i]);
+      }
     }
+    arr.sort(function(a, b) {
+      return a.name.localeCompare(b.name, undefined, { numeric: true });
+    });
+    for (var j = 0; j < arr.length; j++) {
+      fila.push(arr[j]);
+    }
+    document.getElementById('in-pdf').value = '';
     renderLista();
   }
 
-  document.getElementById('in-pdf').addEventListener('change', function(e) {
-    addFiles(e.target.files);
-    e.target.value = '';
-  });
-
-  const dz = document.getElementById('dz');
-  dz.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); dz.classList.add('over'); });
-  dz.addEventListener('dragleave', function(e) { e.preventDefault(); e.stopPropagation(); dz.classList.remove('over'); });
-  dz.addEventListener('drop', function(e) {
+  var dz = document.getElementById('dz');
+  dz.ondragover = function(e) { e.preventDefault(); dz.classList.add('over'); };
+  dz.ondragleave = function(e) { e.preventDefault(); dz.classList.remove('over'); };
+  dz.ondrop = function(e) {
     e.preventDefault();
-    e.stopPropagation();
     dz.classList.remove('over');
-    if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
-  });
+    if (e.dataTransfer && e.dataTransfer.files) {
+      addFiles(e.dataTransfer.files);
+    }
+  };
 
   function mover(i, d) {
-    const ni = i + d;
+    var ni = i + d;
     if (ni < 0 || ni >= fila.length) return;
-    const t = fila[i]; fila[i] = fila[ni]; fila[ni] = t;
+    var t = fila[i];
+    fila[i] = fila[ni];
+    fila[ni] = t;
     renderLista();
   }
-  function rem(i) { fila.splice(i, 1); renderLista(); }
+
+  function rem(i) {
+    fila.splice(i, 1);
+    renderLista();
+  }
+
   function limpar() {
-    fila = []; renderLista();
+    fila = [];
+    document.getElementById('in-pdf').value = '';
+    renderLista();
     document.getElementById('dl-box').style.display = 'none';
     document.getElementById('visor').style.display = 'none';
     document.getElementById('status').textContent = 'Aguardando envio dos arquivos...';
   }
 
   function renderLista() {
-    const el = document.getElementById('lista');
-    el.innerHTML = fila.map((f, i) => `
-      <div class="item">
-        <span class="badge">${i + 1}</span>
+    var el = document.getElementById('lista');
+    var html = '';
+    for (var i = 0; i < fila.length; i++) {
+      var f = fila[i];
+      var mb = (f.size / 1048576).toFixed(1);
+      var setas = fila.length > 1
